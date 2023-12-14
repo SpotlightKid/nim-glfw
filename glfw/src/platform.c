@@ -29,6 +29,10 @@
 
 #include "internal.h"
 
+// These construct a string literal from individual numeric constants
+#define _GLFW_CONCAT_VERSION(m, n, r) #m "." #n "." #r
+#define _GLFW_MAKE_VERSION(m, n, r) _GLFW_CONCAT_VERSION(m, n, r)
+
 //////////////////////////////////////////////////////////////////////////
 //////                       GLFW internal API                      //////
 //////////////////////////////////////////////////////////////////////////
@@ -72,32 +76,37 @@ GLFWbool _glfwSelectPlatform(int desiredID, _GLFWplatform* platform)
     // Only allow the Null platform if specifically requested
     if (desiredID == GLFW_PLATFORM_NULL)
         return _glfwConnectNull(desiredID, platform);
-
-    // If there is only one platform available for auto-selection, let it emit the error
-    // on failure as the platform-specific error description may be more helpful
-    if (desiredID == GLFW_ANY_PLATFORM && count == 1)
-        return supportedPlatforms[0].connect(supportedPlatforms[0].ID, platform);
-
-    for (i = 0;  i < count;  i++)
+    else if (count == 0)
     {
-        if (desiredID == GLFW_ANY_PLATFORM || desiredID == supportedPlatforms[i].ID)
-        {
-            if (supportedPlatforms[i].connect(desiredID, platform))
-                return GLFW_TRUE;
-            else if (desiredID == supportedPlatforms[i].ID)
-                return GLFW_FALSE;
-        }
+        _glfwInputError(GLFW_PLATFORM_UNAVAILABLE, "This binary only supports the Null platform");
+        return GLFW_FALSE;
     }
 
     if (desiredID == GLFW_ANY_PLATFORM)
     {
-        if (count)
-            _glfwInputError(GLFW_PLATFORM_UNAVAILABLE, "Failed to detect any supported platform");
-        else
-            _glfwInputError(GLFW_PLATFORM_UNAVAILABLE, "This binary only supports the Null platform");
+        // If there is exactly one platform available for auto-selection, let it emit the
+        // error on failure as the platform-specific error description may be more helpful
+        if (count == 1)
+            return supportedPlatforms[0].connect(supportedPlatforms[0].ID, platform);
+
+        for (i = 0;  i < count;  i++)
+        {
+            if (supportedPlatforms[i].connect(desiredID, platform))
+                return GLFW_TRUE;
+        }
+
+        _glfwInputError(GLFW_PLATFORM_UNAVAILABLE, "Failed to detect any supported platform");
     }
     else
+    {
+        for (i = 0;  i < count;  i++)
+        {
+            if (supportedPlatforms[i].ID == desiredID)
+                return supportedPlatforms[i].connect(desiredID, platform);
+        }
+
         _glfwInputError(GLFW_PLATFORM_UNAVAILABLE, "The requested platform is not supported");
+    }
 
     return GLFW_FALSE;
 }
@@ -141,7 +150,9 @@ GLFWAPI int glfwPlatformSupported(int platformID)
 
 GLFWAPI const char* glfwGetVersionString(void)
 {
-    return _GLFW_VERSION_NUMBER
+    return _GLFW_MAKE_VERSION(GLFW_VERSION_MAJOR,
+                              GLFW_VERSION_MINOR,
+                              GLFW_VERSION_REVISION)
 #if defined(_GLFW_WIN32)
         " Win32 WGL"
 #endif

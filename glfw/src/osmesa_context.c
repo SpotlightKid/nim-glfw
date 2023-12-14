@@ -124,6 +124,8 @@ GLFWbool _glfwInitOSMesa(void)
         "libOSMesa.8.dylib",
 #elif defined(__CYGWIN__)
         "libOSMesa-8.so",
+#elif defined(__OpenBSD__) || defined(__NetBSD__)
+        "libOSMesa.so",
 #else
         "libOSMesa.so.8",
         "libOSMesa.so.6",
@@ -188,7 +190,7 @@ void _glfwTerminateOSMesa(void)
     }
 }
 
-#define setAttrib(a, v) \
+#define SET_ATTRIB(a, v) \
 { \
     assert(((size_t) index + 1) < sizeof(attribs) / sizeof(attribs[0])); \
     attribs[index++] = a; \
@@ -219,24 +221,24 @@ GLFWbool _glfwCreateContextOSMesa(_GLFWwindow* window,
     {
         int index = 0, attribs[40];
 
-        setAttrib(OSMESA_FORMAT, OSMESA_RGBA);
-        setAttrib(OSMESA_DEPTH_BITS, fbconfig->depthBits);
-        setAttrib(OSMESA_STENCIL_BITS, fbconfig->stencilBits);
-        setAttrib(OSMESA_ACCUM_BITS, accumBits);
+        SET_ATTRIB(OSMESA_FORMAT, OSMESA_RGBA);
+        SET_ATTRIB(OSMESA_DEPTH_BITS, fbconfig->depthBits);
+        SET_ATTRIB(OSMESA_STENCIL_BITS, fbconfig->stencilBits);
+        SET_ATTRIB(OSMESA_ACCUM_BITS, accumBits);
 
         if (ctxconfig->profile == GLFW_OPENGL_CORE_PROFILE)
         {
-            setAttrib(OSMESA_PROFILE, OSMESA_CORE_PROFILE);
+            SET_ATTRIB(OSMESA_PROFILE, OSMESA_CORE_PROFILE);
         }
         else if (ctxconfig->profile == GLFW_OPENGL_COMPAT_PROFILE)
         {
-            setAttrib(OSMESA_PROFILE, OSMESA_COMPAT_PROFILE);
+            SET_ATTRIB(OSMESA_PROFILE, OSMESA_COMPAT_PROFILE);
         }
 
         if (ctxconfig->major != 1 || ctxconfig->minor != 0)
         {
-            setAttrib(OSMESA_CONTEXT_MAJOR_VERSION, ctxconfig->major);
-            setAttrib(OSMESA_CONTEXT_MINOR_VERSION, ctxconfig->minor);
+            SET_ATTRIB(OSMESA_CONTEXT_MAJOR_VERSION, ctxconfig->major);
+            SET_ATTRIB(OSMESA_CONTEXT_MINOR_VERSION, ctxconfig->minor);
         }
 
         if (ctxconfig->forward)
@@ -246,7 +248,7 @@ GLFWbool _glfwCreateContextOSMesa(_GLFWwindow* window,
             return GLFW_FALSE;
         }
 
-        setAttrib(0, 0);
+        SET_ATTRIB(0, 0);
 
         window->context.osmesa.handle =
             OSMesaCreateContextAttribs(attribs, share);
@@ -285,7 +287,7 @@ GLFWbool _glfwCreateContextOSMesa(_GLFWwindow* window,
     return GLFW_TRUE;
 }
 
-#undef setAttrib
+#undef SET_ATTRIB
 
 
 //////////////////////////////////////////////////////////////////////////
@@ -302,7 +304,7 @@ GLFWAPI int glfwGetOSMesaColorBuffer(GLFWwindow* handle, int* width,
 
     _GLFW_REQUIRE_INIT_OR_RETURN(GLFW_FALSE);
 
-    if (window->context.client != GLFW_OSMESA_CONTEXT_API)
+    if (window->context.source != GLFW_OSMESA_CONTEXT_API)
     {
         _glfwInputError(GLFW_NO_WINDOW_CONTEXT, NULL);
         return GLFW_FALSE;
@@ -341,7 +343,7 @@ GLFWAPI int glfwGetOSMesaDepthBuffer(GLFWwindow* handle,
 
     _GLFW_REQUIRE_INIT_OR_RETURN(GLFW_FALSE);
 
-    if (window->context.client != GLFW_OSMESA_CONTEXT_API)
+    if (window->context.source != GLFW_OSMESA_CONTEXT_API)
     {
         _glfwInputError(GLFW_NO_WINDOW_CONTEXT, NULL);
         return GLFW_FALSE;
@@ -373,7 +375,7 @@ GLFWAPI OSMesaContext glfwGetOSMesaContext(GLFWwindow* handle)
     _GLFWwindow* window = (_GLFWwindow*) handle;
     _GLFW_REQUIRE_INIT_OR_RETURN(NULL);
 
-    if (window->context.client != GLFW_OSMESA_CONTEXT_API)
+    if (window->context.source != GLFW_OSMESA_CONTEXT_API)
     {
         _glfwInputError(GLFW_NO_WINDOW_CONTEXT, NULL);
         return NULL;

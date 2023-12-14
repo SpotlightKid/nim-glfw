@@ -27,6 +27,9 @@
 //========================================================================
 
 #include "internal.h"
+
+#if defined(_GLFW_COCOA)
+
 #include <sys/param.h> // For MAXPATHLEN
 
 // Needed for _NSGetProgname
@@ -75,7 +78,6 @@ static void changeToResourcesDirectory(void)
 //
 static void createMenuBar(void)
 {
-    size_t i;
     NSString* appName = nil;
     NSDictionary* bundleInfo = [[NSBundle mainBundle] infoDictionary];
     NSString* nameKeys[] =
@@ -87,7 +89,7 @@ static void createMenuBar(void)
 
     // Try to figure out what the calling application is called
 
-    for (i = 0;  i < sizeof(nameKeys) / sizeof(nameKeys[0]);  i++)
+    for (size_t i = 0;  i < sizeof(nameKeys) / sizeof(nameKeys[0]);  i++)
     {
         id name = bundleInfo[nameKeys[i]];
         if (name &&
@@ -177,8 +179,6 @@ static void createMenuBar(void)
 //
 static void createKeyTables(void)
 {
-    int scancode;
-
     memset(_glfw.ns.keycodes, -1, sizeof(_glfw.ns.keycodes));
     memset(_glfw.ns.scancodes, -1, sizeof(_glfw.ns.scancodes));
 
@@ -297,7 +297,7 @@ static void createKeyTables(void)
     _glfw.ns.keycodes[0x43] = GLFW_KEY_KP_MULTIPLY;
     _glfw.ns.keycodes[0x4E] = GLFW_KEY_KP_SUBTRACT;
 
-    for (scancode = 0;  scancode < 256;  scancode++)
+    for (int scancode = 0;  scancode < 256;  scancode++)
     {
         // Store the reverse translation for faster key name lookup
         if (_glfw.ns.keycodes[scancode] >= 0)
@@ -403,9 +403,7 @@ static GLFWbool initializeTIS(void)
 
 - (NSApplicationTerminateReply)applicationShouldTerminate:(NSApplication *)sender
 {
-    _GLFWwindow* window;
-
-    for (window = _glfw.windowListHead;  window;  window = window->next)
+    for (_GLFWwindow* window = _glfw.windowListHead;  window;  window = window->next)
         _glfwInputWindowCloseRequest(window);
 
     return NSTerminateCancel;
@@ -413,9 +411,7 @@ static GLFWbool initializeTIS(void)
 
 - (void)applicationDidChangeScreenParameters:(NSNotification *) notification
 {
-    _GLFWwindow* window;
-
-    for (window = _glfw.windowListHead;  window;  window = window->next)
+    for (_GLFWwindow* window = _glfw.windowListHead;  window;  window = window->next)
     {
         if (window->context.client != GLFW_NO_API)
             [window->context.nsgl.object update];
@@ -450,9 +446,7 @@ static GLFWbool initializeTIS(void)
 
 - (void)applicationDidHide:(NSNotification *)notification
 {
-    int i;
-
-    for (i = 0;  i < _glfw.monitorCount;  i++)
+    for (int i = 0;  i < _glfw.monitorCount;  i++)
         _glfwRestoreVideoModeCocoa(_glfw.monitors[i]);
 }
 
@@ -469,18 +463,26 @@ void* _glfwLoadLocalVulkanLoaderCocoa(void)
     if (!bundle)
         return NULL;
 
-    CFURLRef url =
-        CFBundleCopyAuxiliaryExecutableURL(bundle, CFSTR("libvulkan.1.dylib"));
-    if (!url)
+    CFURLRef frameworksUrl = CFBundleCopyPrivateFrameworksURL(bundle);
+    if (!frameworksUrl)
         return NULL;
+
+    CFURLRef loaderUrl = CFURLCreateCopyAppendingPathComponent(
+        kCFAllocatorDefault, frameworksUrl, CFSTR("libvulkan.1.dylib"), false);
+    if (!loaderUrl)
+    {
+        CFRelease(frameworksUrl);
+        return NULL;
+    }
 
     char path[PATH_MAX];
     void* handle = NULL;
 
-    if (CFURLGetFileSystemRepresentation(url, true, (UInt8*) path, sizeof(path) - 1))
+    if (CFURLGetFileSystemRepresentation(loaderUrl, true, (UInt8*) path, sizeof(path) - 1))
         handle = _glfwPlatformLoadModule(path);
 
-    CFRelease(url);
+    CFRelease(loaderUrl);
+    CFRelease(frameworksUrl);
     return handle;
 }
 
@@ -685,7 +687,11 @@ void _glfwTerminateCocoa(void)
     _glfw_free(_glfw.ns.clipboardString);
 
     _glfwTerminateNSGL();
+    _glfwTerminateEGL();
+    _glfwTerminateOSMesa();
 
     } // autoreleasepool
 }
+
+#endif // _GLFW_COCOA
 

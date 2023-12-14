@@ -59,6 +59,7 @@ else:
       compile: SrcDir / "wl_monitor.c",
       compile: SrcDir / "wl_window.c",
       compile: SrcDir / "posix_module.c",
+      compile: SrcDir / "posix_poll.c",
       compile: SrcDir / "posix_time.c",
       compile: SrcDir / "posix_thread.c",
       compile: SrcDir / "xkb_unicode.c",
@@ -71,6 +72,7 @@ else:
       compile: SrcDir / "x11_window.c",
       compile: SrcDir / "xkb_unicode.c",
       compile: SrcDir / "posix_module.c",
+      compile: SrcDir / "posix_poll.c",
       compile: SrcDir / "posix_time.c",
       compile: SrcDir / "posix_thread.c",
       compile: SrcDir / "glx_context.c",
@@ -302,7 +304,7 @@ type
     jhLeftUp    = (9, "left up")     # jhLeft or jhUp
     jhLeftDown  = (12, "left down")  # jhLeft or jhDown
 
-const 
+const
   buttonLast* = gbDpadLeft
   joystickLast* = joystick16
 
