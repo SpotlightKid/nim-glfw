@@ -9,20 +9,28 @@ skipDirs = @["examples"]
 
 requires "nim >= 1.6.0"
 
+let examples = @[
+  "boing",
+  "events",
+  "gears",
+  "minimal",
+  "splitview",
+  "triangle",
+  "wave"
+]
+
+task examplesDebug, "Compiles the examples with dynamic linking and debug mode":
+  for example in examples:
+    exec "nim c examples/" & example
+
+task examplesStaticDebug, "Compiles the examples with static linking and debug mode":
+  for example in examples:
+    exec "nim c -d:glfwStaticLib examples/" & example
+
 task examples, "Compiles the examples with dynamic linking":
-  exec "nim c examples/boing"
-  exec "nim c examples/events"
-  exec "nim c examples/gears"
-  exec "nim c examples/minimal"
-  exec "nim c examples/splitview"
-  exec "nim c examples/triangle"
-  exec "nim c examples/wave"
+  for example in examples:
+    exec "nim c -d:release examples/" & example
 
 task examplesStatic, "Compiles the examples with static linking":
-  exec "nim c -d:glfwStaticLib examples/boing"
-  exec "nim c -d:glfwStaticLib examples/events"
-  exec "nim c -d:glfwStaticLib examples/gears"
-  exec "nim c -d:glfwStaticLib examples/minimal"
-  exec "nim c -d:glfwStaticLib examples/splitview"
-  exec "nim c -d:glfwStaticLib examples/triangle"
-  exec "nim c -d:glfwStaticLib examples/wave"
+  for example in examples:
+    exec "nim c -d:release -d:glfwStaticLib examples/" & example
