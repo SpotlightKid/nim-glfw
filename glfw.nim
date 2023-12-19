@@ -706,7 +706,7 @@ proc newWindow*(c = DefaultOpenglWindowConfig): Window =
 
   let sharedMonitor = if c.shareResourcesWith.isNil: nil
                       else: c.shareResourcesWith.handle
-  result.handle = wrapper.createWindow(c.size.w, c.size.h, c.title,
+  result.handle = wrapper.createWindow(c.size.w, c.size.h, c.title.cstring,
     c.fullscreenMonitor, sharedMonitor).failIf(nil)
   gWindowTable[result.handle] = result
 
