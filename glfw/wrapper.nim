@@ -596,7 +596,7 @@ macro generateProcs() =
     proc getJoystickHats*(jid: int32, count: ptr int32): ptr uint8
     proc getJoystickName*(joy: int32): cstring
     proc getJoystickGUID*(jid: int32): cstring
-    proc setJoystickUserPointer*(jid: int, pointerr: pointer)
+    proc setJoystickUserPointer*(jid: int32, pointerr: pointer)
     proc getJoystickUserPointer*(jid: int32): pointer
     proc joystickIsGamepad*(jid: int32): int32
     proc setJoystickCallback*(cbfun: Joystickfun): Joystickfun

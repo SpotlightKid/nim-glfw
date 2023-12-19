@@ -845,3 +845,21 @@ proc setSizeLimits*(w: Window, minwidth, minheight, maxwidth, maxheight: int32) 
 
 proc setAspectRatio*(w: Window, numer, denom: int32) =
   wrapper.setWindowAspectRatio(w, numer, denom)
+
+proc getUserPointer*(joystick: Joystick): pointer =
+  wrapper.getJoystickUserPointer(joystick.int32)
+
+proc setUserPointer*(joystick: Joystick, pointerr: pointer) =
+  wrapper.setJoystickUserPointer(joystick.int32, pointerr)
+
+proc getUserPointer*(monitor: Monitor): pointer =
+  wrapper.getMonitorUserPointer(monitor)
+
+proc setUserPointer*(monitor: Monitor, pointerr: pointer) =
+  wrapper.setMonitorUserPointer(monitor, pointerr)
+
+proc getUserPointer*(win: Window): pointer =
+  wrapper.getWindowUserPointer(win)
+
+proc setUserPointer*(win: Window, pointerr: pointer) =
+  wrapper.setWindowUserPointer(win, pointerr)
